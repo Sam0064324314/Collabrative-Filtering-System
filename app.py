@@ -3,17 +3,20 @@ import numpy as np
 import streamlit as st
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
-from ipynb.fs.full.CollaborativeFiltering import movie_recommender_run
+from recommender import prepare_data, movie_recommender_run
 
 #Set page configuration
 st.set_page_config(layout = "wide", page_title = "Movie Recommendation App", page_icon = ":Cinema:")
 
-#Write code to call movie_recommender_run and display recommendations
+# Load data once and cache it
+@st.cache_resource
+def load_recommendation_data():
+    return prepare_data()
+
+movies_df, ratings_df, rating_cosine_similarity, movies_title_df = load_recommendation_data()
 
 #Display movie rating charts here
 #Read the dataset to find unique users
-column_names = ['User_ID', 'User_Names','Movie_ID','Rating','Timestamp']
-movies_df = pd.read_csv('Movie_data.csv', sep = ',', names = column_names)
 n_users = movies_df.User_Names.unique()
 
 #Create application's header
@@ -27,7 +30,7 @@ User_Name = st.selectbox(
 
 st.write("This user might be interested in the following movies:")
 #Find and display recommendations for selected users
-result = movie_recommender_run(User_Name)
+result = movie_recommender_run(User_Name, movies_df, ratings_df, rating_cosine_similarity, movies_title_df)
 st.table(result.Movie_Title)
 
 # Display details of provided recommendations
